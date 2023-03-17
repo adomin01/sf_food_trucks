@@ -1,10 +1,29 @@
 #!/usr/bin/env perl
 
+use File::Basename;
+use LWP::UserAgent;
 use Text::CSV qw( csv );
 use Data::Dumper;
 use CGI qw(:standard :cgi-lib);
 use strict;
 use warnings;
+
+sub get_remote_csv($$) {
+	my ($url, $file) = @_;
+	my $ua = LWP::UserAgent->new(timeout => 10);
+	my $response = $ua->get("$url");
+	if ($response->is_success) {
+		my @lines = split(/[\r\n]+/, $response->decoded_content);
+		open(my $wh, '>', $file) or die "Cannot write '$file': $!";
+		foreach my $line (@lines) {
+			chomp($line);
+			print {$wh} $line . "\n";
+		}
+		close($wh);
+	} else {
+		die $response->status_line;
+	}
+}
 
 sub get_favorites($$) {
 	my ($array_ref, $item) = @_;
@@ -22,16 +41,18 @@ sub get_favorites($$) {
 ## Main
 
 my $PARAMS = Vars();
-my $CSV_FILE = '/var/www/csv/Mobile_Food_Facility_Permit.csv';
+my $URL = 'https://data.sfgov.org/api/views/rqzj-sfat/rows.csv';
+my $FILENAME = basename($URL);
+my $CSV_FILE = '/tmp/' . $FILENAME;
+
+get_remote_csv($URL, $CSV_FILE);
+
 my $AOH = csv (in => "$CSV_FILE", headers => "auto");
 my $FOOD_ITEM = $$PARAMS{'food_item'};
 my @TRUCK_LIST = get_favorites($AOH, $FOOD_ITEM);
 
 print header();
 print start_html('Engineering Challenge');
-#print '<PRE>' . "\n";
-#print Dumper(%TRUCK_LIST);
-#print '</PRE>' . "\n";
 if (@TRUCK_LIST) {
 	print "<P>Alright, I have the following list of places that serve '$FOOD_ITEM':</P>\n";
 	print '<TABLE BORDER=1>' . "\n";
