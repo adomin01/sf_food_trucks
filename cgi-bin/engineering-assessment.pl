@@ -59,6 +59,14 @@ sub get_favorites($$) {
 	return(@array);
 }
 
+sub get_address_link($$$) {
+	my ($address, $latitude, $longitude) = @_;
+	my $string = '<A HREF="';
+	$string .= 'https://www.google.com/search?q=' . $latitude . '%2C+' . $longitude;
+	$string .= '" TARGET="_blank">' . $address . '</A>';
+	return($string);
+}
+
 sub display_found_trucks(\@$) {
 	my ($array_ref, $food_wanted) = @_;
 	my @truck_list = @{$array_ref};
@@ -72,11 +80,15 @@ sub display_found_trucks(\@$) {
 		print '<TH>FacilityType</TH>' . "\n";
 		print '</TR>' . "\n";
 		foreach my $truck_data (@truck_list) {
+			my $Address = $$truck_data{'Address'};
+			my $Latitude = $$truck_data{'Latitude'};
+			my $Longitude = $$truck_data{'Longitude'};
+			my $address_link = get_address_link($Address, $Latitude, $Longitude);
 			print '<TR>' . "\n";
 			print "<TD>$$truck_data{'Applicant'}</TD>\n";
 			print "<TD>$$truck_data{'FoodItems'}</TD>\n";
 			print "<TD>$$truck_data{'dayshours'}</TD>\n";
-			print "<TD>$$truck_data{'Address'}</TD>\n";
+			print "<TD>$address_link</TD>\n";
 			print "<TD>$$truck_data{'FacilityType'}</TD>\n";
 			print '</TR>' . "\n";
 		}
