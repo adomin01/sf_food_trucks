@@ -21,6 +21,8 @@ sub get_food_options($) {
 			foreach my $item (@items) {
 				next if (length($item) > 30);
 				my $lowercase = lc($item);
+				$lowercase =~ s/([^\(\)]+).*/$1/;
+				$lowercase =~ s/\W+$//g;
 				$hash{$lowercase} = 1;
 			}
 		}
